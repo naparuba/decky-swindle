@@ -1,8 +1,8 @@
 -include .env
 
 DECKY_CLI := $(CURDIR)/cli/decky
-PLUGIN_NAME="Reroll"
-PLUGIN_DIR_NAME="Reroll"
+PLUGIN_NAME="Swindle"
+PLUGIN_DIR_NAME="Swindle"
 
 DECK_USER=deck
 DECK_PASS?=$(DECK_PWD)

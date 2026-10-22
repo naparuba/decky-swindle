@@ -5,13 +5,28 @@ import { FaCaretUp, FaCaretDown } from 'react-icons/fa'
 import { GamepadButton } from '@decky/ui/dist/components/FooterLegend'
 import Trans from '@/lib/i18n'
 import { GamepadEventDetail } from '@decky/ui/src/components/FooterLegend'
-import { ActionSoundEffects, DigitRollerMetadata, PlaySound, ValueTypeMap } from '@/lib/utils'
+import {
+  ActionSoundEffects,
+  AUTO_ROLLER,
+  DigitRollerMetadata,
+  PlaySound,
+  RollerType,
+  SIGN_CHARSET,
+  ValueTypeMap,
+} from '@/lib/utils'
 import SharedDpad from '@/components/SharedDpad'
 import SharedButtons from '@/components/SharedButtons'
 
+// An action the roller offers while it has the focus
+export interface RollerShortcut {
+  label: string
+  run: () => void
+}
+
 interface DigitRollerProps {
   value: string
-  type: ValueTypes
+  // a type of value
+  type: RollerType
   onChange: (value: string) => void
   onEnter?: () => void
   onLeave?: () => void
@@ -22,6 +37,14 @@ interface DigitRollerProps {
   autoFocus?: boolean
   mute?: boolean
   isFullscreen?: boolean
+  // X, focused or editing
+  secondaryShortcut?: RollerShortcut
+  // L2, focused or editing
+  leftTriggerShortcut?: RollerShortcut
+  // L4 (the upper back button on the left), focused or editing
+  rearLeftShortcut?: RollerShortcut
+  // R2 starts a scan from this roller (the panel handles it)
+  leaveEditingOnRightTrigger?: boolean
 }
 
 export interface DigitRollerTheme {
@@ -51,22 +74,30 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
     // [GamepadButton.DIR_LEFT]: Trans('ACTION_MOVE', 'Move'),
     // [GamepadButton.DIR_RIGHT]: Trans('ACTION_MOVE', 'Move'),
     // SECONDARY = X
-    [GamepadButton.SECONDARY]: Trans('ACTION_RESET', 'Reset'),
+    [GamepadButton.SECONDARY]: props.secondaryShortcut?.label ?? Trans('ACTION_RESET', 'Reset'),
     // OPTIONS = Y
     [GamepadButton.OPTIONS]: Trans('ACTION_DIGIT_MAX', 'Max'),
     // OPTIONS = A
     [GamepadButton.OK]: Trans('ACTION_DIGIT_MIN', 'Min'),
     // CANCEL = B
     [GamepadButton.CANCEL]: Trans('ACTION_BACK', 'Back'),
+    ...(props.leftTriggerShortcut ? { [GamepadButton.TRIGGER_LEFT]: props.leftTriggerShortcut.label } : {}),
   }
   const nonEditingActions = {
     [GamepadButton.OK]: Trans('ACTION_EDIT', 'Edit'),
+    [GamepadButton.CANCEL]: Trans('ACTION_BACK', 'Back'),
+    ...(props.secondaryShortcut ? { [GamepadButton.SECONDARY]: props.secondaryShortcut.label } : {}),
+    ...(props.leftTriggerShortcut ? { [GamepadButton.TRIGGER_LEFT]: props.leftTriggerShortcut.label } : {}),
   }
 
+  // a signed roller starts with a sign slot, which is not a digit
+  const signSlots = meta.signed ? 1 : 0
+  const charsetAt = (index: number) => (index < signSlots ? SIGN_CHARSET : meta.charset)
+
   const leadingZeroCount = useMemo(() => {
-    const idx = digits.findIndex(d => d !== '0')
+    const idx = digits.findIndex((d, i) => i >= signSlots && d !== '0')
     return idx === -1 ? digits.length - 1 : idx
-  }, [digits])
+  }, [digits, signSlots])
 
   useEffect(() => {
     setDigits(DigitRollerMetadata(props.type, props.value).initialDigits)
@@ -104,7 +135,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
 
     const button = event.detail.button
     const maxLen = digits.length
-    const { charset } = meta
+    const charset = charsetAt(cursor)
     if (button === GamepadButton.DIR_RIGHT) {
       setCursor(p => (p + 1) % maxLen)
     } else if (button === GamepadButton.DIR_LEFT) {
@@ -121,14 +152,40 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
     }
   }
 
-  // X: Reset
+  // X: the shortcut of the roller if it has one, else Reset
   // @ts-expect-error: supports returning false for bubbling despite void type definition
   const handleSecondaryButton = () => {
+    if (props.secondaryShortcut) {
+      props.secondaryShortcut.run()
+      return
+    }
     if (!isEditing) {
       return false
     }
     props.onChange('')
     setCursor(meta.length - 1)
+  }
+  // L2 and L4: the shortcuts of the roller
+  // @ts-expect-error: supports returning false for bubbling despite void type definition
+  const handleButtonDown = (event: CustomEvent<GamepadEventDetail>) => {
+    if (event.detail.button === GamepadButton.TRIGGER_RIGHT && props.leaveEditingOnRightTrigger) {
+      if (isEditing && !event.detail.is_repeat) {
+        setIsEditing(false)
+      }
+      return false
+    }
+    const shortcut =
+      event.detail.button === GamepadButton.TRIGGER_LEFT
+        ? props.leftTriggerShortcut
+        : event.detail.button === GamepadButton.REAR_LEFT_UPPER
+        ? props.rearLeftShortcut
+        : undefined
+    if (!shortcut) {
+      return false
+    }
+    if (!event.detail.is_repeat) {
+      shortcut.run()
+    }
   }
   // Y: Max
   // @ts-expect-error: supports returning false for bubbling despite void type definition
@@ -136,10 +193,11 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
     if (!isEditing) {
       return false
     }
-    // 将当前光标位置设为 9
-    if (digits[cursor] !== '9') {
+    // 将当前光标位置设为 9 (the sign slot: '-')
+    const max = cursor < signSlots ? '-' : '9'
+    if (digits[cursor] !== max) {
       const newDigits = [...digits]
-      newDigits[cursor] = '9'
+      newDigits[cursor] = max
       props.onChange(newDigits.join(''))
     }
   }
@@ -155,10 +213,11 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
       ;(event.currentTarget as HTMLElement).click()
       return false
     }
-    // 将当前光标位置设为 0
-    if (digits[cursor] !== '0') {
+    // 将当前光标位置设为 0 (the sign slot: '+')
+    const min = cursor < signSlots ? '+' : '0'
+    if (digits[cursor] !== min) {
       const newDigits = [...digits]
-      newDigits[cursor] = '0'
+      newDigits[cursor] = min
       props.onChange(newDigits.join(''))
     }
   }
@@ -209,7 +268,10 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
     display: 'flex',
     height: '40px',
     width: '100%',
-    gap: props.type === ValueTypes.Int64 || props.type === ValueTypes.Float64 ? 0 : '2px',
+    gap:
+      props.type === ValueTypes.Int64 || props.type === ValueTypes.Float64 || props.type === AUTO_ROLLER
+        ? 0
+        : '2px',
     alignItems: 'center',
     borderRadius: '2px',
     alignContent: 'center',
@@ -254,7 +316,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
             <div>{Trans('ACTION_DIGIT_MIN', 'Min')}</div>
           </SharedButtons>
           <SharedButtons x={true}>
-            <div>{Trans('ACTION_RESET', 'Reset')}</div>
+            <div>{props.secondaryShortcut?.label ?? Trans('ACTION_RESET', 'Reset')}</div>
           </SharedButtons>
         </div>
       </>
@@ -266,6 +328,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
       autoFocus={props.autoFocus}
       onGamepadDirection={handleDirection}
       onSecondaryButton={handleSecondaryButton}
+      onButtonDown={handleButtonDown}
       onOptionsButton={handleOptionsButton}
       onOKButton={handleOkButton}
       onGamepadFocus={() => {
@@ -305,12 +368,15 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
     >
       {isEditing && renderGuide()}
       <div style={wrapperStyles}>
-        {props.showType && <div style={valueTypeStyles}>{ValueTypeMap.get(props.type)}</div>}
+        {props.showType && (
+          <div style={valueTypeStyles}>{props.type === AUTO_ROLLER ? 'auto' : ValueTypeMap.get(props.type)}</div>
+        )}
 
         <div style={containerStyles}>
           {digits.map((d, i) => {
             const isActive = isEditing && i === cursor
-            const opacity = i < leadingZeroCount ? 0.3 : 1.0
+            // a '+' is the default: shown faintly, like the leading zeros
+            const opacity = i < signSlots ? (d === '-' ? 1.0 : 0.3) : i < leadingZeroCount ? 0.3 : 1.0
             return (
               <div
                 key={i}

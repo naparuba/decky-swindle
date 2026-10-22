@@ -1,6 +1,6 @@
 export const log = (name: string, ...args: unknown[]) => {
   console.log(
-    `%c Reroll %c ${name} %c`,
+    `%c Swindle %c ${name} %c`,
     'background: #08667e; color: black;',
     'background: #007d9c; color: black;',
     'background: transparent;',
@@ -10,7 +10,7 @@ export const log = (name: string, ...args: unknown[]) => {
 
 export const debug = (name: string, ...args: unknown[]) => {
   console.debug(
-    `%c Reroll %c ${name} %c`,
+    `%c Swindle %c ${name} %c`,
     'background: #08667e; color: black;',
     'background: #007d9c; color: black;',
     'color: blue;',
@@ -20,7 +20,7 @@ export const debug = (name: string, ...args: unknown[]) => {
 
 export const warn = (name: string, ...args: unknown[]) => {
   console.warn(
-    `%c Reroll %c ${name} %c`,
+    `%c Swindle %c ${name} %c`,
     'background: #08667e; color: black;',
     'background: #ffbb00; color: black;',
     'color: blue;',
@@ -30,7 +30,7 @@ export const warn = (name: string, ...args: unknown[]) => {
 
 export const error = (name: string, ...args: unknown[]) => {
   console.error(
-    `%c Reroll %c ${name} %c`,
+    `%c Swindle %c ${name} %c`,
     'background: #08667e; color: black;',
     'background: #FF0000;',
     'background: transparent;',

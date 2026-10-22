@@ -1,16 +1,16 @@
 {
-  "name": "decky-reroll",
+  "name": "decky-swindle",
   "version": "0.2.1",
   "description": "A high-performance memory scanning plugin for the Steam Deck.",
   "type": "module",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/run.mjs"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kayon/decky-reroll.git"
+    "url": "git+https://github.com/naparuba/decky-swindle.git"
   },
   "keywords": [
     "cheat",
@@ -18,12 +18,17 @@
     "steam-deck",
     "decky"
   ],
-  "author": "Kayon <kayon.hu@gmail.com>",
+  "author": "naparuba",
+  "contributors": [
+    "Kayon <kayon.hu@gmail.com> (original author of Reroll and memscan)",
+    "EcthorSilva (https://github.com/EcthorSilva) (value freezing)",
+    "maosasagawa (https://github.com/maosasagawa) (emulator games mode, engine fixes)"
+  ],
   "license": "LGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/kayon/decky-reroll/issues"
+    "url": "https://github.com/naparuba/decky-swindle/issues"
   },
-  "homepage": "https://github.com/kayon/decky-reroll#readme",
+  "homepage": "https://github.com/naparuba/decky-swindle#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.2",
     "@decky/ui": "^4.11.1",

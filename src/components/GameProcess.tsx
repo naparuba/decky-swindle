@@ -268,7 +268,7 @@ const GameProcess = (props: GameProcessProps): JSX.Element => {
           {Trans('WRONG_PROCESS', 'Wrong process?')}
         </div>
         <DialogButton
-          onClick={() => showQRCodeModal('https://github.com/kayon/decky-reroll/issues')}
+          onClick={() => showQRCodeModal('https://github.com/naparuba/decky-swindle/issues')}
           onCancelButton={() => $globalState.navigation(InternalRouting.Main)}
           style={{
             paddingBlock: 0,
