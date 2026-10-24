@@ -1,7 +1,7 @@
 import { PanelSection, PanelSectionRow, quickAccessMenuClasses } from '@decky/ui'
 import { definePlugin } from '@decky/api'
 import React, { useEffect, useMemo } from 'react'
-import { RiDiceFill } from 'react-icons/ri'
+import { RiSpyFill } from 'react-icons/ri'
 import DigitRoller from './components/DigitRoller'
 import { InternalRouting } from './classes'
 import { ActionSoundEffects, AUTO_ROLLER, IsValueValid, PlaySound } from '@/lib/utils'
@@ -388,7 +388,7 @@ function TitleContent() {
         padding-bottom: 0 !important;
       }
       `}</style>
-      {globalStateSnap.loading ? <Loading /> : <RiDiceFill style={{ fontSize: '26px' }} />}
+      {globalStateSnap.loading ? <Loading /> : <RiSpyFill style={{ fontSize: '26px' }} />}
       <span>Swindle</span>
     </div>
   )
@@ -431,7 +431,7 @@ export default definePlugin(() => {
     name: 'Swindle',
     titleView: <TitleContent />,
     content: <Content />,
-    icon: <RiDiceFill style={{ fontSize: '20px' }} />,
+    icon: <RiSpyFill style={{ fontSize: '20px' }} />,
     onDismount() {
       Logger.debug('Dismount')
       for (const reg of registry) {
