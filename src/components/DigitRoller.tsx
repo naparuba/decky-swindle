@@ -69,6 +69,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
 
   const editingActions = {
     // FooterLegend 溢出了, 这里隐藏一些吧
+    // FooterLegend overflows, hide a few here
     // [GamepadButton.DIR_UP]: Trans('ACTION_INCREASE', 'Increase'),
     // [GamepadButton.DIR_DOWN]: Trans('ACTION_DECREASE', 'Decrease'),
     // [GamepadButton.DIR_LEFT]: Trans('ACTION_MOVE', 'Move'),
@@ -109,6 +110,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
 
   useEffect(() => {
     // 当使用触摸点击改变了焦点, 退出编辑
+    // leave editing when a touch click changes the focus
     if (!isHover && isEditing) {
       setIsEditing(false)
     }
@@ -194,6 +196,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
       return false
     }
     // 将当前光标位置设为 9 (the sign slot: '-')
+    // set the digit at the cursor to 9
     const max = cursor < signSlots ? '-' : '9'
     if (digits[cursor] !== max) {
       const newDigits = [...digits]
@@ -207,13 +210,18 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
   const handleOkButton = (event: CustomEvent<GamepadEventDetail>) => {
     if (!isEditing) {
       // 未使用onOKButton时, A 本身就是默认 Focus 触发 onActivate
+      // without onOKButton, A's default focus triggers onActivate
       // 但使用了onOKButton后, 即使返回 false 也不再冒泡
+      // but with onOKButton, returning false no longer bubbles
       // 导致无法获取焦点, 这里使用click强制focus
+      // so focus cannot be gained; force it with click here
       // 或许有更优雅的办法, 但这至少起作用了
+      // maybe there is a cleaner way, but this works
       ;(event.currentTarget as HTMLElement).click()
       return false
     }
     // 将当前光标位置设为 0 (the sign slot: '+')
+    // set the digit at the cursor to 0
     const min = cursor < signSlots ? '+' : '0'
     if (digits[cursor] !== min) {
       const newDigits = [...digits]
@@ -349,6 +357,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
         const now = Date.now()
         if (!isEditing) {
           // 防止输入B连发直接退到了插件列表页
+          // stop a repeated B press from leaving straight to the plugin list
           if (lastCancelTime.current > 0 && now - lastCancelTime.current < 500) {
             // prevent
             return
@@ -357,6 +366,7 @@ const DigitRoller = (props: DigitRollerProps): JSX.Element => {
           return false
         }
         // 记录退出编辑模式的时间, 在一定间隔内阻止下一次Cancel
+        // record when editing was left; block the next Cancel for a short while
         lastCancelTime.current = now
         setIsEditing(false)
       }}

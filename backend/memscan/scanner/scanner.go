@@ -98,8 +98,10 @@ func (s *Scanner) scanBytes(reader io.Reader, collector CollectorFunc, options *
 	var (
 		size = s.value.Size()
 		// 每次搜索的块, 并为truncated预留了容量 size, 因为 truncated 只会小于 Value.Size
+		// the chunk searched each time, sized to leave room for truncated (always smaller than Value.Size)
 		chunk = make([]byte, s.bufSize+size)
 		// 上一次 chunk 末尾可能截断的数据, 在下一轮追加到 chunk 头部
+		// data truncated at the end of the last chunk, prepended to the next one
 		truncated         = make([]byte, size-1)
 		truncLen          = 0
 		forward, backward int
@@ -128,18 +130,21 @@ func (s *Scanner) scanBytes(reader io.Reader, collector CollectorFunc, options *
 		}
 
 		// 将上次截断的数据移到开头
+		// move the previously truncated data to the front
 		if truncLen > 0 {
 			forward = copy(chunk, truncated[:truncLen])
 		} else {
 			forward = 0
 		}
 		// 填充剩余空间
+		// fill the rest of the space
 		backward, err = io.ReadFull(reader, chunk[forward:forward+s.bufSize])
 		if backward < 0 {
 			backward = 0
 		}
 
 		// 上次截断的 truncated + 本次读取, 不足以完成一次搜索
+		// the truncated bytes plus this read are not enough for a search
 		if forward+backward < size {
 			if tryAlignNextPage() {
 				continue
@@ -171,6 +176,7 @@ func (s *Scanner) scanBytes(reader io.Reader, collector CollectorFunc, options *
 
 		if len(currentChunk) >= size {
 			// 预留上一次可能匹配截断的 < Value.Size 大小
+			// reserve room for a possible truncated match, < Value.Size
 			truncLen = copy(truncated, currentChunk[len(currentChunk)-size+1:])
 		} else {
 			truncLen = copy(truncated, currentChunk)

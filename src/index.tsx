@@ -51,6 +51,7 @@ function Content() {
     }
     const num = Number(globalStateSnap.scanValue)
     // 首次扫描不能为0
+    // the first scan cannot be 0
     if (isNaN(num) || num === 0) {
       return false
     }
@@ -77,6 +78,7 @@ function Content() {
 
   const Resettable = useMemo<boolean>(() => {
     // 有任意结果后可重置
+    // resettable once there is any result
     return !!globalStateSnap.multiResults
   }, [globalStateSnap.multiResults])
 
@@ -419,7 +421,9 @@ export default definePlugin(() => {
       (_gameActionId: number, _appId: string, action: string, requestedAction: string) => {
         Logger.debug('GameActionUserRequest', action, requestedAction)
         // 在 AppLifetimeNotifications 中不设置
+        // not set in AppLifetimeNotifications
         // 防止过早打开 GameProcess 选择了错误的进程
+        // avoids GameProcess opening too early and picking the wrong process
         if (requestedAction === 'CreatingProcess') {
           $globalState.setGame(window.SteamUIStore.MainRunningApp)
         }

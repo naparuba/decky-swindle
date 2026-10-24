@@ -131,7 +131,9 @@ export const DigitRollerMetadata = (type: RollerType, initialValue: string) => {
 }
 
 export const ValueTypeOptions = Object.keys(ValueTypes)
-  .filter(key => isNaN(Number(key))) // 过滤掉反向映射产生的数字 Key
+  .filter(key => isNaN(Number(key)))
+  // 过滤掉反向映射产生的数字 Key
+  // filters out the numeric keys from the reverse enum mapping
   .map(key => ({
     label: key,
     value: ValueTypes[key as keyof typeof ValueTypes],

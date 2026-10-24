@@ -269,6 +269,7 @@ func (proc *Process) readProcStatus() *ProcStatus {
 		line := scanner.Text()
 
 		// 处理 Threads
+		// handle Threads
 		if strings.HasPrefix(line, "Threads:") {
 			read++
 			fields := strings.Fields(line)
@@ -283,6 +284,7 @@ func (proc *Process) readProcStatus() *ProcStatus {
 		}
 
 		// 处理 VmData
+		// handle VmData
 		if strings.HasPrefix(line, "VmData:") {
 			read++
 			fields := strings.Fields(line)

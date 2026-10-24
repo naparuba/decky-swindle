@@ -24,6 +24,7 @@ type mockReader struct {
 	data []byte
 	off  int
 	step int // if > 0 每次 Read 返回的字节数
+	// bytes returned by each Read when > 0
 }
 
 func (m *mockReader) Read(p []byte) (n int, err error) {
@@ -116,6 +117,7 @@ func TestScanner_Truncated(t *testing.T) {
 		s := NewScannerBuffer(context.TODO(), *val, 10)
 
 		// 模拟分片读取，每步 10 字节
+		// simulate chunked reads, 10 bytes at a time
 		reader := &mockReader{data: data, step: 10}
 		indexes := s.testScan(reader)
 
@@ -127,11 +129,14 @@ func TestScanner_Truncated(t *testing.T) {
 
 	t.Run("Alignment and Truncation", func(t *testing.T) {
 		// 测试对齐：特征码在索引 2 (非对齐) 和索引 4 (对齐)
+		// test alignment: the needle at index 2 (misaligned) and index 4 (aligned)
 		pattern := []byte{0xAA, 0xBB, 0xCC, 0xDD}
 		v := NewBytes(pattern)
 		v.typ = Int32 // 强制设为 Int32 对齐内存
+		// force Int32 so memory is aligned
 
 		// 构造数据: 索引 4 是对齐的，索引 6 是非对齐的
+		// build data: index 4 is aligned, index 6 is not
 		// [00 00 00 00 AA BB CC DD 00 00 AA BB CC DD]
 		//              ^ Aligned         ^ Non aligned
 		complexData := make([]byte, 14)
@@ -139,15 +144,20 @@ func TestScanner_Truncated(t *testing.T) {
 		copy(complexData[10:], pattern)
 
 		// 缓冲区设为 5，步长设为 5
+		// buffer size 5, step 5
 		// 这会使得索引 4 的特征码在读取第一块 [00 00 00 00 AA] 时就被截断
+		// this truncates the needle at index 4 while reading the first chunk [00 00 00 00 AA]
 		s := NewScannerBuffer(context.TODO(), *v, 5)
 		reader := &mockReader{data: complexData, step: 5}
 
 		indexes := s.testScan(reader)
 
 		// 期待结果：
+		// expected result:
 		// 索引 4: 对齐 (4 % 4 == 0) -> 应该存在
+		// index 4: aligned (4 % 4 == 0), should be found
 		// 索引 10: 非对齐 (10 % 4 != 0) -> 应该被过滤
+		// index 10: misaligned (10 % 4 != 0), should be filtered out
 		expected := []int{4}
 		if !reflect.DeepEqual(indexes, expected) {
 			t.Errorf("Alignment failed, expected %v, got %v", expected, indexes)

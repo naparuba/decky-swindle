@@ -18,18 +18,25 @@ const (
 )
 
 var regionSkipped = []string{
-	"/usr/share/",        // 字体、多语言数据
-	"/usr/lib/",          // 系统库
+	"/usr/share/", // 字体、多语言数据
+	// fonts, locale data
+	"/usr/lib/", // 系统库
+	// system libraries
 	"/run/host/usr/lib/", // 系统库
+	// system libraries
 	"/usr/lib/x86_64-linux-gnu/",
 	"/dev/dri", // 硬件驱动映射
-	"[vvar]",   // 内核同步数据
-	"[vdso]",   // 系统调用加速
+	// hardware driver mapping
+	"[vvar]", // 内核同步数据
+	// kernel sync data
+	"[vdso]", // 系统调用加速
+	// syscall acceleration
 	"/home/deck/.local/share/Steam/ubuntu12_64/",
 }
 
 func isSkipRegion(filename string) bool {
 	// 匿名映射
+	// anonymous mapping
 	if filename == "" {
 		return false
 	}
@@ -96,6 +103,7 @@ func (m *Maps) Parse(scanLevel RegionScanLevel, includeShared bool) (regions Reg
 
 		if codeRegions > 0 {
 			// 检查是否脱离了当前 ELF 映射序列
+			// check whether we left the current ELF mapping sequence
 			if perms.Exec() || (filename != binName && (filename != "" || start != prevEnd)) || codeRegions >= 4 {
 				codeRegions = 0
 				isExe = false
@@ -112,6 +120,7 @@ func (m *Maps) Parse(scanLevel RegionScanLevel, includeShared bool) (regions Reg
 
 		if codeRegions == 0 {
 			// 寻找 ELF 的起始段 (通常是 .text)
+			// find the start segment of the ELF (usually .text)
 			if perms.Exec() && filename != "" {
 				codeRegions++
 				if filename == m.exe {
@@ -124,6 +133,7 @@ func (m *Maps) Parse(scanLevel RegionScanLevel, includeShared bool) (regions Reg
 				exeRegions++
 				codeRegions = exeRegions
 				exeLoad = start // 更新起始基址
+				// update the base address
 				isExe = true
 				binName = filename
 			}
@@ -154,6 +164,7 @@ func (m *Maps) Parse(scanLevel RegionScanLevel, includeShared bool) (regions Reg
 		useful := false
 
 		// 如果不是 REGION_ALL, 通常只关注可写内存 rw--
+		// unless REGION_ALL, usually only writable memory rw-- matters
 		if scanLevel != REGION_ALL && !perms.Write() {
 			continue
 		}
@@ -163,6 +174,7 @@ func (m *Maps) Parse(scanLevel RegionScanLevel, includeShared bool) (regions Reg
 			useful = true
 		case REGION_HEAP_STACK_EXECUTABLE_BSS:
 			// 匿名映射通常是 BSS
+			// an anonymous mapping is usually BSS
 			if filename == "" {
 				useful = true
 				break

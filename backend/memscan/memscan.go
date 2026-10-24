@@ -174,6 +174,7 @@ func (m *Memscan) RenderResults(valueType *scanner.Value) (rows [][2]string) {
 		return
 	}
 	// 这里不考虑地址数量 > IOV_MAX
+	// address count > IOV_MAX is not handled here
 
 	valueSize := valueType.Size()
 	buf := getReadBuffer(count * valueSize)
@@ -237,6 +238,7 @@ func (m *Memscan) ChangeValues(address []uint64, value *scanner.Value) {
 }
 
 // 确保 len(addresses) <= IOV_MAX
+// ensure len(addresses) <= IOV_MAX
 func (m *Memscan) filterResults(addresses []uint64, valueSize int, comp scanner.ValueComparable, disturb byte, readBuffer []byte, results *MmapUint64) {
 	m.readValuesRaw(addresses, valueSize, disturb, readBuffer)
 
@@ -359,9 +361,12 @@ func (m *Memscan) writeValues(addresses []uint64, value *scanner.Value) (int, er
 		currentPos += successCount
 
 		// 如果没写完，说明 currentPos 对应的地址无效
+		// an incomplete write means the address at currentPos is invalid
 		if currentPos < n {
 			lastErr = err // 通常是 EFAULT
+			// usually EFAULT
 			// 只有在遇到致命错误（如进程不存在）且一个都没写成功时才彻底退出
+			// only bail out entirely on a fatal error (e.g. the process is gone) with nothing written yet
 			if err != nil && !errors.Is(err, unix.EFAULT) && nWrite == 0 {
 				return totalWritten, err
 			}

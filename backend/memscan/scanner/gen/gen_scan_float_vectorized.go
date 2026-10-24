@@ -48,6 +48,7 @@ type TypeConfig struct {
 	Type   string
 	Size   int
 	Factor int // 每个类型独立的展开因子
+	// the unroll factor, specific to each type
 }
 
 type UnrollItem struct {

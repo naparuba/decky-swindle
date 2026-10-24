@@ -27,6 +27,7 @@ func scanFloat32Rounded(ctx context.Context, reader io.Reader, bufSize int, min 
 		}
 		if n >= 4 {
 			// 保证处理的长度始终是对齐到 4 字节的
+			// keeps the length processed always aligned to 4 bytes
 			processable := (n / 4) * 4
 			scanFloat32Vectorized(chunk[:processable], min, max, offset, collector)
 		}
@@ -37,6 +38,7 @@ func scanFloat32Rounded(ctx context.Context, reader io.Reader, bufSize int, min 
 			}
 			if options != nil {
 				// 如果未读完期望大小, 尝试对齐到下一页
+				// if the expected size was not fully read, try aligning to the next page
 				nextOffset, ok := options.alignNextPage(seeker, uint64(offset))
 				if ok {
 					offset = int(nextOffset)

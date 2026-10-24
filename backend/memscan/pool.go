@@ -9,6 +9,7 @@ import (
 var readBufferPool = sync.Pool{
 	New: func() any {
 		// 满足scanner.Value除Bytes类型外一次最大读取
+		// covers the largest single read of scanner.Value, Bytes excluded
 		return make([]byte, IOV_MAX*8)
 	},
 }

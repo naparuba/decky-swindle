@@ -75,7 +75,9 @@ func (m *Memscan) FirstScan(value *scanner.Value, args ...bool) time.Duration {
 	m.round += 1
 
 	// 现在, 结果保存地址是有序的, 虽然增加了一点点内存
+	// results are now stored in address order, at a small memory cost
 	// 但这很值得, 没有排序开销
+	// worth it: no sorting cost later
 	for _, buf := range m.regionBuffers {
 		if buf == nil {
 			continue

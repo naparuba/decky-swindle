@@ -36,6 +36,7 @@ func RegionsOptimize(regions []Region) (optimized []Region) {
 		curr := regions[i]
 
 		// 合并连续小块
+		// merge adjacent small chunks
 		for i+1 < len(regions) {
 			next := regions[i+1]
 			if curr.End == next.Start &&
@@ -57,18 +58,24 @@ func RegionsOptimize(regions []Region) (optimized []Region) {
 		}
 
 		// 拆分超大块
+		// split oversized chunks
 		if curr.Size > regionLargeSize {
 			currentStart := curr.Start
 			for currentStart < curr.End {
 				// 预设结束位置
+				// default end position
 				nextEnd := currentStart + regionLargeSize
 
 				// 对齐到 4096 页面边界
+				// align to the 4096 page boundary
 				// 这样拆分点永远在页面边缘，不会切断页内数据
+				// so the split always falls on a page edge, never inside page data
 				if nextEnd < curr.End {
 					nextEnd = nextEnd & ^uint64(4095)
 					// 如果对齐后导致 nextEnd 回退到了 currentStart，
+					// if aligning pushes nextEnd back to currentStart,
 					// 说明 regionLargeSize 太小，强制加一个 PageSize
+					// regionLargeSize is too small; force one more PageSize
 					if nextEnd <= currentStart {
 						nextEnd = currentStart + 4096
 					}
@@ -81,6 +88,7 @@ func RegionsOptimize(regions []Region) (optimized []Region) {
 					End:   nextEnd,
 					Size:  nextEnd - currentStart,
 					// 其它属性已不再重要
+					// the other fields no longer matter
 				})
 				currentStart = nextEnd
 			}

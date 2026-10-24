@@ -34,6 +34,7 @@ type MmapUint64 struct {
 func NewMmapUint64(caps int) (*MmapUint64, error) {
 	size := caps * 8
 	// 匿名私有
+	// anonymous private
 	raw, err := unix.Mmap(-1, 0, size, unix.PROT_READ|unix.PROT_WRITE, unix.MAP_ANON|unix.MAP_PRIVATE)
 	if err != nil {
 		return nil, err
@@ -90,6 +91,7 @@ func (m *MmapUint64) AppendSlice(items []uint64) error {
 
 // Put
 // 注意, 按需创建, 没有自动扩容
+// note: created on demand, no automatic growth
 func (m *MmapUint64) Put(items ...uint64) error {
 	n := uint64(len(items))
 	if n == 0 {
@@ -138,6 +140,7 @@ func (m *MmapUint64) Clear() {
 	atomic.StoreUint64(&m.cursor, 0)
 	if len(m.raw) > 0 {
 		// 释放对应的物理页(RSS)，但保留虚拟地址空间(VIRT)
+		// frees the physical pages (RSS) but keeps the virtual address space (VIRT)
 		unix.Madvise(m.raw, unix.MADV_DONTNEED)
 	}
 }

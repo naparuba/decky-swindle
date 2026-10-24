@@ -65,7 +65,9 @@ func (m *Memscan) NextScan(value *scanner.Value) time.Duration {
 }
 
 // nextScanDense 使用了 VirtualRegion 避免了稀疏读取的性能开销
+// nextScanDense uses VirtualRegion to avoid the cost of sparse reads
 // 对于千万级结果 nextScanDense 耗时应该也是毫秒级的
+// even with tens of millions of results, nextScanDense should still take milliseconds
 func (m *Memscan) nextScanDense(value *scanner.Value) time.Duration {
 	st := time.Now()
 	regions := BuildVirtualRegions(m.results.Data(), uint64(value.Size()))
@@ -143,9 +145,13 @@ func (m *Memscan) taskNextScanDense(scan *scanner.Scanner, regionIndex int, regi
 }
 
 // 对于千万级结果, nextScanSparse 可能会耗时几秒, 是 FirstScan 全量扫描耗时的几倍多, 这太慢了
+// with tens of millions of results, nextScanSparse can take seconds, several times a full FirstScan: too slow
 // 主要的性能开销在于非连续地址的稀疏读取, 和 IOV_MAX 以及 bad address 跳过
+// the cost is mostly sparse reads of non-contiguous addresses, plus IOV_MAX and bad-address handling
 // 对于少量结果, 相比 nextScanDense 略微快几十毫秒
+// with few results it is only tens of milliseconds faster than nextScanDense
 // 虽然微乎其微, 但我还是保留了这个方法
+// a small gain, but the method is kept
 func (m *Memscan) nextScanSparse(value *scanner.Value) time.Duration {
 	count := m.results.Len()
 	st := time.Now()

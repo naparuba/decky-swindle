@@ -22,6 +22,7 @@ func GetPathUID(name string) uint32 {
 
 func ProcessExists(pid int) bool {
 	// 发送 0 信号给进程，判断进程是否存在
+	// send signal 0 to the process to check whether it exists
 	return syscall.Kill(pid, 0) == nil
 }
 

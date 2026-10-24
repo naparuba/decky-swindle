@@ -64,7 +64,9 @@ interface GameProcessProps {
   game?: AppGame
   process?: Snapshot<Process> | null
   // 当在游戏中显示 QuickAccess 时视为全屏
+  // treated as fullscreen when QuickAccess shows over the game
   // 通过 !footerLegendVisible 判断
+  // decided by !footerLegendVisible
   isFullscreen: boolean
 }
 

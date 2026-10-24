@@ -291,6 +291,7 @@ export const $globalState = {
 
   updateRootContainerHeight: (height: number) => {
     // 通常是480 当 FooterLegend 显示时为 440
+    // usually 480, 440 when the FooterLegend is shown
     const visible = height < 480
     if (visible !== globalState.footerLegendVisible) {
       globalState.footerLegendVisible = visible

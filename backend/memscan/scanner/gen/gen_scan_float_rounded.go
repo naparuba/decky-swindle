@@ -37,6 +37,7 @@ func scan{{.Name}}Rounded(ctx context.Context, reader io.Reader, bufSize int, mi
 		}
 		if n >= {{.Type.Size}} {
 			// 保证处理的长度始终是对齐到 {{.Type.Size}} 字节的
+			// keeps the length processed always aligned to {{.Type.Size}} bytes
 			processable := (n / {{.Type.Size}}) * {{.Type.Size}}
 			scan{{.Type.Name}}Vectorized(chunk[:processable], min, max, offset, collector)
 		}
@@ -47,6 +48,7 @@ func scan{{.Name}}Rounded(ctx context.Context, reader io.Reader, bufSize int, mi
 			}
 			if options != nil {
 				// 如果未读完期望大小, 尝试对齐到下一页
+				// if the expected size was not fully read, try aligning to the next page
 				nextOffset, ok := options.alignNextPage(seeker, uint64(offset))
 				if ok {
 					offset = int(nextOffset)
