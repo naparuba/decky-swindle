@@ -1,0 +1,36 @@
+// Copyright (C) 2025 kayon <kayon.hu@gmail.com>
+// Copyright (C) 2026 naparuba <naparuba@gmail.com>
+
+package scanner
+
+import "io"
+
+type Options struct {
+	// 当ExpectedSize > 0时, 如果读取发生意外(通常是 bad address)
+	// when ExpectedSize > 0, if the read fails unexpectedly (usually a bad address)
+	// 应用 AlignNextPage 对齐并翻页
+	// apply AlignNextPage to align and skip to the next page
+	// 这通常在 NextScan 场景, io.Reader 是 VirtualRegion 时
+	// this is typically the NextScan case, when the io.Reader is a VirtualRegion
+	ExpectedSize uint64
+}
+
+func (options *Options) alignNextPage(seeker io.Seeker, offset uint64) (nextOffset uint64, ok bool) {
+	if options.ExpectedSize == 0 || seeker == nil {
+		return
+	}
+
+	nextOffset = (offset + 0xFFF) &^ 0xFFF
+	// 确保步进到下一页
+	// make sure it steps to the next page
+	if nextOffset <= offset {
+		nextOffset += 0x1000
+	}
+	if nextOffset >= options.ExpectedSize {
+		return 0, false
+	}
+	if _, err := seeker.Seek(int64(nextOffset), io.SeekStart); err != nil {
+		return 0, false
+	}
+	return nextOffset, true
+}

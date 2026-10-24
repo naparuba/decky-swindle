@@ -37,8 +37,8 @@ const Disclaimer = (props: DisclaimerProps): JSX.Element => {
               style={styles}
               dangerouslySetInnerHTML={{
                 __html: Trans(
-                  'DISCLAIMER_REROLL',
-                  '<b>Reroll</b> is a general-purpose memory research tool. It is developed independently and does not contain any proprietary assets, copyrighted source code, or bypass mechanisms belonging to third-party game developers or publishers.'
+                  'DISCLAIMER_SWINDLE',
+                  '<b>Swindle</b> is a general-purpose memory research tool. It is developed independently and does not contain any proprietary assets, copyrighted source code, or bypass mechanisms belonging to third-party game developers or publishers.'
                 ),
               }}
             />
